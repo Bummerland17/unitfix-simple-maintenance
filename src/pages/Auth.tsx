@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,25 @@ import { Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+const SITE_URL = "https://unitfix.netlify.app";
+
 export default function Auth() {
   const { user, loading, signIn, signUp } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "reset" | "update-password">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+
+  // Detect recovery event (user clicked password reset link)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("update-password");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (loading) {
     return (
@@ -25,14 +37,27 @@ export default function Auth() {
     );
   }
 
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user && mode !== "update-password") return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+
+    if (mode === "update-password") {
+      const { error } = await supabase.auth.updateUser({ password });
+      setSubmitting(false);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Password updated", description: "You can now sign in with your new password." });
+        setMode("signin");
+      }
+      return;
+    }
+
     if (mode === "reset") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/auth",
+        redirectTo: SITE_URL + "/auth",
       });
       setSubmitting(false);
       if (error) {
@@ -61,28 +86,30 @@ export default function Auth() {
             </div>
           </div>
           <CardTitle className="text-xl">
-            {mode === "reset" ? "Reset Password" : mode === "signup" ? "Create Account" : "Welcome Back"}
+            {mode === "update-password" ? "Set New Password" : mode === "reset" ? "Reset Password" : mode === "signup" ? "Create Account" : "Welcome Back"}
           </CardTitle>
           <CardDescription>
-            {mode === "reset" ? "Enter your email to receive a reset link" : mode === "signup" ? "Start managing your properties" : "Sign in to your dashboard"}
+            {mode === "update-password" ? "Enter your new password below" : mode === "reset" ? "Enter your email to receive a reset link" : mode === "signup" ? "Start managing your properties" : "Sign in to your dashboard"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+            {mode !== "update-password" && (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            )}
             {mode !== "reset" && (
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{mode === "update-password" ? "New Password" : "Password"}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -95,7 +122,7 @@ export default function Auth() {
               </div>
             )}
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Please wait..." : mode === "reset" ? "Send Reset Link" : mode === "signup" ? "Create Account" : "Sign In"}
+              {submitting ? "Please wait..." : mode === "update-password" ? "Update Password" : mode === "reset" ? "Send Reset Link" : mode === "signup" ? "Create Account" : "Sign In"}
             </Button>
           </form>
           <div className="mt-4 text-center space-y-2">
