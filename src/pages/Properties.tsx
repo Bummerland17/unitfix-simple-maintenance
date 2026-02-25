@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Building2, Trash2 } from "lucide-react";
+import { Plus, Building2, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Properties() {
@@ -18,6 +18,12 @@ export default function Properties() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
+
+  // Edit state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editAddress, setEditAddress] = useState("");
 
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ["properties"],
@@ -53,6 +59,24 @@ export default function Properties() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("properties")
+        .update({ name: editName, address: editAddress })
+        .eq("id", editId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      setEditOpen(false);
+      toast({ title: "Property updated" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("properties").delete().eq("id", id);
@@ -63,6 +87,13 @@ export default function Properties() {
       toast({ title: "Property deleted" });
     },
   });
+
+  const openEdit = (prop: any) => {
+    setEditId(prop.id);
+    setEditName(prop.name);
+    setEditAddress(prop.address);
+    setEditOpen(true);
+  };
 
   return (
     <DashboardLayout>
@@ -80,13 +111,7 @@ export default function Properties() {
               <DialogHeader>
                 <DialogTitle>Add Property</DialogTitle>
               </DialogHeader>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  createMutation.mutate();
-                }}
-                className="space-y-4"
-              >
+              <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate(); }} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="prop-name">Property Name</Label>
                   <Input id="prop-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Maple Street Duplex" required />
@@ -102,6 +127,28 @@ export default function Properties() {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Property</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={(e) => { e.preventDefault(); updateMutation.mutate(); }} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Property Name</Label>
+                <Input id="edit-name" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-address">Address</Label>
+                <Input id="edit-address" value={editAddress} onChange={(e) => setEditAddress(e.target.value)} required />
+              </div>
+              <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {isLoading ? (
           <div className="text-muted-foreground text-center py-12">Loading...</div>
@@ -121,14 +168,24 @@ export default function Properties() {
                     <CardTitle className="text-base">{prop.name}</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">{prop.address}</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteMutation.mutate(prop.id)}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openEdit(prop)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteMutation.mutate(prop.id)}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
