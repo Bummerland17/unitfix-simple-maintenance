@@ -13,6 +13,7 @@ import Requests from "./pages/Requests";
 import RequestDetail from "./pages/RequestDetail";
 import PublicRequest from "./pages/PublicRequest";
 import SettingsPage from "./pages/SettingsPage";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 import { ReactNode } from "react";
 
@@ -35,6 +36,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/request/:token" element={<PublicRequest />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
