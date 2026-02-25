@@ -31,7 +31,7 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const siteUrl = "https://unitfix.netlify.app";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -39,8 +39,8 @@ serve(async (req) => {
       line_items: [{ price: "price_1T4WtsCPtbF5T99JD8d7ToJy", quantity: 1 }],
       mode: "subscription",
       subscription_data: { trial_period_days: 14 },
-      success_url: `${origin}/dashboard?checkout=success`,
-      cancel_url: `${origin}/pricing`,
+      success_url: `${siteUrl}/dashboard?checkout=success`,
+      cancel_url: `${siteUrl}/pricing`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
