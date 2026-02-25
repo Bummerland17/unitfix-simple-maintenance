@@ -13,7 +13,20 @@ const SITE_URL = "https://unitfix.netlify.app";
 
 export default function Auth() {
   const { user, loading, signIn, signUp } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup" | "reset" | "update-password">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "reset" | "update-password">(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const searchParams = new URLSearchParams(window.location.search);
+
+    if (hashParams.get("type") === "recovery" || searchParams.get("mode") === "update-password") {
+      return "update-password";
+    }
+
+    if (searchParams.get("mode") === "reset") {
+      return "reset";
+    }
+
+    return "signin";
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -22,7 +35,10 @@ export default function Auth() {
   // Detect recovery event (user clicked password reset link)
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const isRecovery = hashParams.get("type") === "recovery";
+
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && isRecovery)) {
         setMode("update-password");
       }
     });
@@ -37,7 +53,8 @@ export default function Auth() {
     );
   }
 
-  if (user && mode !== "update-password") return <Navigate to="/dashboard" replace />;
+  const isRecoveryFromUrl = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type") === "recovery";
+  if (user && mode !== "update-password" && !isRecoveryFromUrl) return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
