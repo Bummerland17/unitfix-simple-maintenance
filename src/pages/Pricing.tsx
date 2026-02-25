@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const included = [
   "Up to 5 units",
@@ -29,6 +30,7 @@ export default function Pricing() {
   const { user, loading, subscription } = useAuth();
   const navigate = useNavigate();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const { toast } = useToast();
 
   if (loading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
 
@@ -41,16 +43,16 @@ export default function Pricing() {
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout");
       if (error || data?.error) {
-        // If auth issue, redirect to sign in
         if (data?.error?.includes("authenticated") || data?.error?.includes("expired")) {
+          toast({ title: "Session expired", description: "Please sign in again to continue.", variant: "destructive" });
           navigate("/auth");
           return;
         }
         throw new Error(data?.error || error?.message);
       }
       if (data?.url) window.open(data.url, "_blank");
-    } catch (err) {
-      console.error("Checkout error:", err);
+    } catch (err: any) {
+      toast({ title: "Checkout failed", description: err?.message || "Something went wrong. Please try again.", variant: "destructive" });
     }
     setCheckoutLoading(false);
   };
