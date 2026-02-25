@@ -107,7 +107,7 @@ export default function Auth() {
             {mode === "update-password" ? "Set New Password" : mode === "reset" ? "Reset Password" : mode === "signup" ? "Create Account" : "Welcome Back"}
           </CardTitle>
           <CardDescription>
-            {mode === "update-password" ? "Enter your new password below" : mode === "reset" ? "Enter your email to receive a reset link" : mode === "signup" ? "Start managing your properties" : "Sign in to your dashboard"}
+            {mode === "update-password" ? "Enter your new password below" : mode === "reset" ? "Enter your email to receive a reset link" : mode === "signup" ? "Sign up free — no credit card required" : "Sign in to your dashboard"}
           </CardDescription>
         </CardHeader>
         <CardContent>
