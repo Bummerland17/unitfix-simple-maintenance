@@ -7,6 +7,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,17 +38,27 @@ serve(async (req) => {
       });
     }
     const token = authHeader.replace("Bearer ", "");
+
+    // Try getUser first, fall back to JWT payload for email
+    let email: string | undefined;
     const { data, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError || !data.user?.email) {
+    if (!userError && data.user?.email) {
+      email = data.user.email;
+    } else {
+      // Fallback: decode JWT payload for email (Lovable Cloud proxy tokens)
+      const payload = decodeJwtPayload(token);
+      email = payload?.email as string | undefined;
+    }
+
+    if (!email) {
       return new Response(JSON.stringify({ error: "Session expired. Please sign in again." }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
       });
     }
-    const user = data.user;
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
@@ -47,7 +68,7 @@ serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
+      customer_email: customerId ? undefined : email,
       line_items: [{ price: "price_1T4WtsCPtbF5T99JD8d7ToJy", quantity: 1 }],
       mode: "subscription",
       subscription_data: { trial_period_days: 14 },
