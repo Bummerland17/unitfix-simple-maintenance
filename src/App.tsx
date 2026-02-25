@@ -16,7 +16,7 @@ import SettingsPage from "./pages/SettingsPage";
 import Pricing from "./pages/Pricing";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +27,17 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function RecoveryRedirect() {
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    if (hashParams.get("type") === "recovery") {
+      window.location.replace(`/auth${window.location.hash}`);
+    }
+  }, []);
+
+  return <LandingPage />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -35,7 +46,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<RecoveryRedirect />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/request/:token" element={<PublicRequest />} />
