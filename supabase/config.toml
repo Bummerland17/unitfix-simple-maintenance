@@ -1,1 +1,4 @@
 project_id = "eesrycvnvudjlewzbrcl"
+
+[functions.notify-landlord]
+verify_jwt = false

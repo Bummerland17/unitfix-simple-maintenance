@@ -48,15 +48,22 @@ export default function PublicRequest() {
         photoUrl = urlData.publicUrl;
       }
 
-      const { error } = await supabase.from("maintenance_requests").insert({
+      const requestData = {
         unit_id: unit!.id,
         tenant_name: tenantName,
         tenant_contact: tenantContact,
         issue_description: description,
         urgency,
         photo_url: photoUrl,
-      });
+      };
+
+      const { error } = await supabase.from("maintenance_requests").insert(requestData);
       if (error) throw error;
+
+      // Fire-and-forget email notification
+      supabase.functions.invoke("notify-landlord", {
+        body: { record: requestData },
+      }).catch(console.error);
     },
     onSuccess: () => setSubmitted(true),
   });
