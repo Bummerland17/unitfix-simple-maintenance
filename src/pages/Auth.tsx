@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Auth() {
   const { user, loading, signIn, signUp } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +30,20 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = isSignUp ? await signUp(email, password) : await signIn(email, password);
+    if (mode === "reset") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/auth",
+      });
+      setSubmitting(false);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Check your email", description: "We sent you a password reset link." });
+        setMode("signin");
+      }
+      return;
+    }
+    const { error } = mode === "signup" ? await signUp(email, password) : await signIn(email, password);
     setSubmitting(false);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -46,9 +60,11 @@ export default function Auth() {
               <span className="text-xl font-bold text-foreground">UnitFix</span>
             </div>
           </div>
-          <CardTitle className="text-xl">{isSignUp ? "Create Account" : "Welcome Back"}</CardTitle>
+          <CardTitle className="text-xl">
+            {mode === "reset" ? "Reset Password" : mode === "signup" ? "Create Account" : "Welcome Back"}
+          </CardTitle>
           <CardDescription>
-            {isSignUp ? "Start managing your properties" : "Sign in to your dashboard"}
+            {mode === "reset" ? "Enter your email to receive a reset link" : mode === "signup" ? "Start managing your properties" : "Sign in to your dashboard"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -64,29 +80,36 @@ export default function Auth() {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
+            {mode !== "reset" && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
+              {submitting ? "Please wait..." : mode === "reset" ? "Send Reset Link" : mode === "signup" ? "Create Account" : "Sign In"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-2">
+            {mode === "signin" && (
+              <button type="button" onClick={() => setMode("reset")} className="block w-full text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Forgot your password?
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
+              {mode === "signup" ? "Already have an account? Sign in" : "Need an account? Sign up"}
             </button>
           </div>
         </CardContent>

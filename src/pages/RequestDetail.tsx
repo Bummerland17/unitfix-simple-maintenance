@@ -11,9 +11,10 @@ import { StatusBadge, UrgencyBadge } from "@/components/StatusBadge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function RequestDetail() {
   const { id } = useParams<{ id: string }>();
@@ -47,6 +48,21 @@ export default function RequestDetail() {
     setNotes(request.internal_notes || "");
     setCost(request.estimated_cost?.toString() || "");
   }
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("maintenance_requests").delete().eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
+      toast({ title: "Request deleted" });
+      navigate("/requests");
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -94,9 +110,32 @@ export default function RequestDetail() {
           <ArrowLeft className="h-4 w-4" /> Back to Requests
         </Button>
 
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-foreground">Request Details</h1>
-          <StatusBadge status={request.status} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground">Request Details</h1>
+            <StatusBadge status={request.status} />
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive gap-2">
+                <Trash2 className="h-4 w-4" /> Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this request?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. The maintenance request will be permanently removed.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => deleteMutation.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
