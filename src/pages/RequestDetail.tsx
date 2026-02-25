@@ -11,8 +11,8 @@ import { StatusBadge, UrgencyBadge } from "@/components/StatusBadge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import { ArrowLeft, Trash2, Clock } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -41,7 +41,6 @@ export default function RequestDetail() {
   const [notes, setNotes] = useState("");
   const [cost, setCost] = useState("");
 
-  // Sync form when data loads
   const isFormReady = request && !status;
   if (isFormReady) {
     setStatus(request.status);
@@ -80,7 +79,7 @@ export default function RequestDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["request", id] });
       queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
-      toast({ title: "Request updated" });
+      toast({ title: "Request updated successfully" });
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -136,6 +135,19 @@ export default function RequestDetail() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </div>
+
+        {/* Activity metadata */}
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Clock className="h-3.5 w-3.5" />
+            Created {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
+          </span>
+          {request.completed_at && (
+            <span>
+              Completed {formatDistanceToNow(new Date(request.completed_at), { addSuffix: true })}
+            </span>
+          )}
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
