@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wrench, CheckCircle2, ArrowRight, Mail } from "lucide-react";
+import { Wrench, CheckCircle2, ArrowRight, ArrowLeft, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -67,7 +67,9 @@ export default function Pricing() {
           </Link>
           <div className="flex items-center gap-3">
             {user ? (
-              <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>
+              <>
+                <Link to="/dashboard"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" />Back to Dashboard</Button></Link>
+              </>
             ) : (
               <>
                 <Link to="/auth"><Button variant="ghost" size="sm">Sign In</Button></Link>
