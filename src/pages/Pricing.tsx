@@ -40,7 +40,14 @@ export default function Pricing() {
     setCheckoutLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout");
-      if (error) throw error;
+      if (error || data?.error) {
+        // If auth issue, redirect to sign in
+        if (data?.error?.includes("authenticated") || data?.error?.includes("expired")) {
+          navigate("/auth");
+          return;
+        }
+        throw new Error(data?.error || error?.message);
+      }
       if (data?.url) window.open(data.url, "_blank");
     } catch (err) {
       console.error("Checkout error:", err);
