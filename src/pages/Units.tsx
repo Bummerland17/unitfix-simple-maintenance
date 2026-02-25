@@ -10,11 +10,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent a
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, DoorOpen, Copy, Trash2, Link } from "lucide-react";
+import { Plus, DoorOpen, Copy, Trash2, Link, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Units() {
-  const { user } = useAuth();
+  const { user, subscription } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -89,6 +91,12 @@ export default function Units() {
             <h1 className="text-2xl font-bold text-foreground">Units</h1>
             <p className="text-muted-foreground">Manage units and share public request links</p>
           </div>
+          {/* Freemium gate: free plan = 1 unit max */}
+          {!subscription.subscribed && units.length >= 1 ? (
+            <Button onClick={() => navigate("/pricing")} variant="outline" className="gap-2">
+              Upgrade to Add More Units <ArrowRight className="h-4 w-4" />
+            </Button>
+          ) : (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-2" /> Add Unit</Button>
@@ -127,6 +135,7 @@ export default function Units() {
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         {isLoading ? (

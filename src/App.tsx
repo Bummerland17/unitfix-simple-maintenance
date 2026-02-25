@@ -14,6 +14,7 @@ import RequestDetail from "./pages/RequestDetail";
 import PublicRequest from "./pages/PublicRequest";
 import SettingsPage from "./pages/SettingsPage";
 import Pricing from "./pages/Pricing";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import { ReactNode } from "react";
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/request/:token" element={<PublicRequest />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
             <Route path="/units" element={<ProtectedRoute><Units /></ProtectedRoute>} />
             <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
