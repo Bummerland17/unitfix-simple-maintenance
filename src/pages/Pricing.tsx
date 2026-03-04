@@ -130,10 +130,10 @@ export default function Pricing() {
             <CardHeader className="text-center pb-2">
               <CardTitle className="text-lg font-medium text-muted-foreground">Landlord Plan</CardTitle>
               <div className="mt-2">
-                <span className="text-4xl font-bold text-foreground">$15</span>
+                <span className="text-4xl font-bold text-foreground">$29</span>
                 <span className="text-muted-foreground">/month</span>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">14-day free trial · Cancel anytime</p>
+              <p className="text-sm text-muted-foreground mt-1">14-day free trial · Cancel anytime · Save 20% annually</p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
