@@ -79,12 +79,12 @@ export default function LandingPage() {
           Built for Small Landlords
         </div>
         <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight max-w-2xl mx-auto leading-tight">
-          Maintenance requests,
+          Your tenant texts you a problem.
           <br />
-          <span className="text-primary">without the chaos.</span>
+          <span className="text-primary">They should text this link instead.</span>
         </h1>
         <p className="mt-5 text-lg text-muted-foreground max-w-xl mx-auto">
-          Designed specifically for independent landlords managing 1–5 units. No bloated property management software. Just maintenance tracking that works.
+          One link per unit. Tenants submit. You track. No more scattered texts, missed voicemails, or 11pm calls. Built for landlords with 1–5 units.
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <Link to="/auth">
@@ -159,7 +159,7 @@ export default function LandingPage() {
               Start Your Free Trial <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
-          <p className="mt-3 text-sm text-primary-foreground/50">14 days free · Then $15/month</p>
+          <p className="mt-3 text-sm text-primary-foreground/50">14 days free · Then $29/month</p>
         </div>
       </section>
 
