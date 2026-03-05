@@ -156,6 +156,11 @@ export default function Pricing() {
               {!subscription.subscribed && (
                 <p className="text-xs text-muted-foreground text-center">No credit card required to start</p>
               )}
+              <p style={{fontSize:'12px',color:'#9ca3af',marginTop:'4px',textAlign:'center'}}>🔒 Secured with 256-bit SSL encryption</p>
+              <div style={{display:'flex',alignItems:'center',gap:'8px',marginTop:'8px',fontSize:'13px',color:'#6b7280',justifyContent:'center'}}>
+                <span style={{fontSize:'18px'}}>🛡️</span>
+                <span><strong>30-day money-back guarantee.</strong> No questions asked.</span>
+              </div>
             </CardContent>
           </Card>
         </div>
